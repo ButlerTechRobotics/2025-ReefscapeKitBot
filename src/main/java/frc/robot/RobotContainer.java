@@ -14,10 +14,10 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
@@ -26,7 +26,6 @@ import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOSim;
 import frc.robot.subsystems.drive.DriveIOTalonSRX;
 import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.roller.Roller;
 import frc.robot.subsystems.roller.RollerIO;
 import frc.robot.subsystems.roller.RollerIOSim;
@@ -49,22 +48,28 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
+  // Roller
+  public final Roller roller;
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        drive = new Drive(new DriveIOTalonSRX(), new GyroIOPigeon2());
+        drive = new Drive(new DriveIOTalonSRX(), new GyroIO() {});
+        roller = new Roller(new RollerIOTalonSRX());
         break;
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
         drive = new Drive(new DriveIOSim(), new GyroIO() {});
+        roller = new Roller(new RollerIOSim());
         break;
 
       default:
         // Replayed robot, disable IO implementations
         drive = new Drive(new DriveIO() {}, new GyroIO() {});
+        roller = new Roller(new RollerIO() {});
         break;
     }
 
@@ -100,6 +105,13 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.arcadeDrive(
             drive, () -> -controller.getLeftY(), () -> -controller.getRightX()));
+
+    controller
+        .leftBumper()
+        .whileTrue(Commands.runEnd(() -> roller.runVolts(6), () -> roller.runVolts(0), roller));
+    controller
+        .rightBumper()
+        .whileTrue(Commands.runEnd(() -> roller.runVolts(-6), () -> roller.runVolts(0), roller));
   }
 
   /**

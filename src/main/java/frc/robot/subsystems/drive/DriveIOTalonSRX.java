@@ -47,6 +47,7 @@ public class DriveIOTalonSRX implements DriveIO {
 
     leftLeader.setInverted(leftInverted);
     rightLeader.setInverted(rightInverted);
+    rightFollower.setInverted(true);
 
     leftFollower.follow(leftLeader);
     rightFollower.follow(rightLeader);
@@ -93,7 +94,7 @@ public class DriveIOTalonSRX implements DriveIO {
         Units.radiansToRotations(leftRadPerSec) / 10.0, // Raw units are ticks per 100ms :(
         DemandType.ArbitraryFeedForward,
         leftFFVolts / 12.0);
-    leftLeader.set(
+    rightLeader.set(
         TalonSRXControlMode.Velocity,
         Units.radiansToRotations(rightFFVolts) / 10.0, // Raw units are ticks per 100ms :(
         DemandType.ArbitraryFeedForward,
